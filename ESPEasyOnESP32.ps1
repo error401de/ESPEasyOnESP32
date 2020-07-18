@@ -4,6 +4,12 @@
 #Author:		error401de / https://github.com/error401de
 ##################################################################
 
+function writeToDevice($message, $command, $var, $com) {
+	Write-Host $message
+	Start-Sleep -Seconds 3
+	$port.writeLine("$($command) " + $var)
+}
+
 Write-Host "Checking permissions..."
 if (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
 	Write-Warning "Please run this script as Administrator."
@@ -37,22 +43,12 @@ else {
 		if ( $flash.ExitCode -eq 0 ) {
 			Write-Host "Waiting 30 seconds..."
 			Start-Sleep -Seconds 30
-			Write-Host "Set SSID..."
 			$port = new-Object System.IO.Ports.SerialPort "COM$($comInput)",115200,None,8,one
 			$port.Open()
-			Start-Sleep -Seconds 5
-			$port.writeLine("WifiSSID " + $wifiSSID)
-			Start-Sleep -Seconds 3
-			$port.readLine()
-			Write-Host "Set password..."
-			$port.WriteLine("WifiKey " + $wifiPasswordPlain)
-			Start-Sleep -Seconds 3
-			Write-Host "Save settings..."
-			$port.WriteLine("Save")
-			Start-Sleep -Seconds 3
-			$port.readLine()
-			Write-Host "Device will now be rebooted. All done."
-			$port.WriteLine("Reboot")
+			writeToDevice -message "Setting SSID..." -command "WifiSSID" -var $wifiSSID -com $comInput
+			writeToDevice -message "Setting password..." -command "WifiKey" -var $wifiPasswordPlain -com $comInput
+			writeToDevice -message "Saving settings..." -command "Save"
+			writeToDevice -message "Device will now be rebooted. All done." -command "Reboot"
 			$port.close()
 		} else {
 			Write-Warning "An error occured. Check error.log for more information."
